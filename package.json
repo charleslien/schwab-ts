@@ -1,0 +1,18 @@
+{
+  "name": "schwab-ts",
+  "version": "0.0.1",
+  "description": "Unofficial TypeScript Wrapper for Charles Schwab",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charleslien/schwab-ts.git"
+  },
+  "author": "charleslien",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/charleslien/schwab-ts/issues"
+  },
+  "homepage": "https://github.com/charleslien/schwab-ts#readme"
+}
