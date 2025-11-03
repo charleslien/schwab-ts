@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const datetimeSchema = z.iso.datetime().transform((date) => new Date(date));
+
 export const AccountNumberHashSchema = z.strictObject({
   accountNumber: z.string(),
   hashValue: z.string(),
@@ -308,8 +310,8 @@ export const OrderStrategySchema = z.strictObject({
     "OTA",
     "PAIR",
   ]),
-  closeTime: z.iso.datetime(),
-  enteredTime: z.iso.datetime(),
+  closeTime: datetimeSchema,
+  enteredTime: datetimeSchema,
   orderBalance: OrderBalanceSchema,
   orderStrategyType: orderStrategyTypeSchema,
   orderVersion: z.int(),
@@ -483,7 +485,7 @@ export const AccountFixedIncomeSchema = z.strictObject({
   description: z.string(),
   instrumentId: z.int(),
   netChange: z.number(),
-  maturityDate: z.iso.datetime(),
+  maturityDate: datetimeSchema,
   factor: z.number(),
   variableRate: z.number(),
 });
@@ -708,7 +710,7 @@ export const AccountSchema = z.strictObject({
 export type Account = z.infer<typeof AccountSchema>;
 
 export const DateParamSchema = z.strictObject({
-  date: z.iso.datetime(),
+  date: datetimeSchema,
 });
 
 export const OrderLegCollectionSchema = z.strictObject({
@@ -739,7 +741,7 @@ export const ExecutionLegSchema = z.strictObject({
   quantity: z.number(),
   mismarkedQuantity: z.number(),
   instrumentId: z.int(),
-  time: z.iso.datetime(),
+  time: datetimeSchema,
 });
 export type ExecutionLeg = z.infer<typeof ExecutionLegSchema>;
 
@@ -764,14 +766,14 @@ export const OrderSchema = z.strictObject({
   session: sessionSchema,
   duration: durationSchema,
   orderType: orderTypeSchema,
-  cancelTime: z.iso.datetime(),
+  cancelTime: datetimeSchema,
   complexOrderStrategyType: complexOrderStrategyTypeSchema,
   quantity: z.number(),
   filledQuantity: z.number(),
   remainingQuantity: z.number(),
   requestedDestination: requestedDestinationSchema,
   destinationLinkName: z.string(),
-  releaseTime: z.iso.datetime(),
+  releaseTime: datetimeSchema,
   stopPrice: z.number(),
   stopPriceLinkBasis: stopPriceLinkBasisSchema,
   stopPriceLinkType: stopPriceLinkTypeSchema,
@@ -789,8 +791,8 @@ export const OrderSchema = z.strictObject({
   cancelable: z.boolean().default(false),
   editable: z.boolean().default(false),
   status: statusSchema,
-  enteredTime: z.iso.datetime(),
-  closeTime: z.iso.datetime(),
+  enteredTime: datetimeSchema,
+  closeTime: datetimeSchema,
   tag: z.string(),
   accountNumber: z.int(),
   orderActivityCollection: z.array(OrderActivitySchema),
@@ -804,13 +806,13 @@ export const OrderRequestSchema = z.strictObject({
   session: sessionSchema,
   duration: durationSchema,
   orderType: orderTypeRequestSchema,
-  cancelTime: z.iso.datetime(),
+  cancelTime: datetimeSchema,
   complexOrderStrategyType: complexOrderStrategyTypeSchema,
   quantity: z.number(),
   filledQuantity: z.number(),
   remainingQuantity: z.number(),
   destinationLinkName: z.string(),
-  releaseTime: z.iso.datetime(),
+  releaseTime: datetimeSchema,
   stopPrice: z.number(),
   stopPriceLinkBasis: stopPriceLinkBasisSchema,
   stopPriceLinkType: stopPriceLinkTypeSchema,
@@ -828,8 +830,8 @@ export const OrderRequestSchema = z.strictObject({
   cancelable: z.boolean().default(false),
   editable: z.boolean().default(false),
   status: statusSchema,
-  enteredTime: z.iso.datetime(),
-  closeTime: z.iso.datetime(),
+  enteredTime: datetimeSchema,
+  closeTime: datetimeSchema,
   accountNumber: z.int(),
   orderActivityCollection: z.array(OrderActivitySchema),
   replacingOrderCollection: z.array(ReplacingOrderSchema),
@@ -1043,7 +1045,7 @@ export const TransactionFixedIncomeSchema = z.strictObject({
     "ASSET_BACKED_SECURITY",
     "UNKNOWN",
   ]),
-  maturityDate: z.iso.datetime(),
+  maturityDate: datetimeSchema,
   factor: z.number(),
   multiplier: z.number(),
   variableRate: z.number(),
@@ -1101,59 +1103,82 @@ export const TransactionMutualFundSchema = z.strictObject({
     "NO_LOAD_TAXABLE",
     "UNKNOWN",
   ]),
-  exchangeCutoffTime: z.iso.datetime(),
-  purchaseCutoffTime: z.iso.datetime(),
-  redemptionCutoffTime: z.iso.datetime(),
+  exchangeCutoffTime: datetimeSchema,
+  purchaseCutoffTime: datetimeSchema,
+  redemptionCutoffTime: datetimeSchema,
 });
 export type TransactionMutualFund = z.infer<typeof TransactionMutualFundSchema>;
 
-// TransactionOptionSchema -> TransactionAPIOptionDeliverableSchema
-// TransactionAPIOptionDeliverableSchema -> TransactionInstrumentSchema
-// TransactionOptionSchema <> TransactionInstrumentSchema
-// TransactionInstrumentSchema -> FutureSchema
-// TransactionInstrumentSchema -> IndexSchema
-// IndexSchema <> FutureSchema
-// FutureSchema -> TransactionOptionSchema
+export type TransactionAPIOptionDeliverable = {
+  rootSymbol: string;
+  strikePercent: number;
+  deliverableNumber: number;
+  deliverableUnits: number;
+  deliverable: TransactionInstrument;
+  assetType: assetType;
+};
+export const TransactionAPIOptionDeliverableSchema: z.ZodType<TransactionAPIOptionDeliverable> =
+  z.strictObject({
+    rootSymbol: z.string(),
+    strikePercent: z.int(),
+    deliverableNumber: z.int(),
+    deliverableUnits: z.number(),
+    deliverable: z.lazy(() => TransactionInstrumentSchema),
+    assetType: assetTypeSchema,
+  });
 
-export const TransactionAPIOptionDeliverableSchema = z.strictObject({
-  rootSymbol: z.string(),
-  strikePercent: z.int(),
-  deliverableNumber: z.int(),
-  deliverableUnits: z.number(),
-  deliverable: TransactionInstrumentSchema,
-  assetType: assetTypeSchema,
-});
-export type TransactionAPIOptionDeliverable = z.infer<
-  typeof TransactionAPIOptionDeliverableSchema
->;
-
-export const TransactionOptionSchema = z.strictObject({
-  assetType: z.enum([
-    "EQUITY",
-    "OPTION",
-    "INDEX",
-    "MUTUAL_FUND",
-    "CASH_EQUIVALENT",
-    "FIXED_INCOME",
-    "CURRENCY",
-    "COLLECTIVE_INVESTMENT",
-  ]),
-  cusip: z.string(),
-  symbol: z.string(),
-  description: z.string(),
-  instrumentId: z.int(),
-  netChange: z.number(),
-  expirationDate: z.iso.datetime(),
-  optionDeliverables: z.array(TransactionAPIOptionDeliverableSchema),
-  optionPremiumMultiplier: z.int(),
-  putCall: z.enum(["PUT", "CALL", "UNKNOWN"]),
-  strikePrice: z.number(),
-  type: z.enum(["VANILLA", "BINARY", "BARRIER", "UNKNOWN"]),
-  underlyingSymbol: z.string(),
-  underlyingCusip: z.string(),
-  deliverable: TransactionInstrumentSchema,
-});
-export type TransactionOption = z.infer<typeof TransactionOptionSchema>;
+export type TransactionOption = {
+  assetType:
+    | "EQUITY"
+    | "OPTION"
+    | "INDEX"
+    | "MUTUAL_FUND"
+    | "CASH_EQUIVALENT"
+    | "FIXED_INCOME"
+    | "CURRENCY"
+    | "COLLECTIVE_INVESTMENT";
+  cusip: string;
+  symbol: string;
+  description: string;
+  instrumentId: number;
+  netChange: number;
+  expirationDate: Date;
+  optionDeliverables: TransactionAPIOptionDeliverable[];
+  optionPremiumMultiplier: number;
+  putCall: "PUT" | "CALL" | "UNKNOWN";
+  strikePrice: number;
+  type: "VANILLA" | "BINARY" | "BARRIER" | "UNKNOWN";
+  underlyingSymbol: string;
+  underlyingCusip: string;
+  deliverable: TransactionInstrument;
+};
+export const TransactionOptionSchema: z.ZodType<TransactionOption> =
+  z.strictObject({
+    assetType: z.enum([
+      "EQUITY",
+      "OPTION",
+      "INDEX",
+      "MUTUAL_FUND",
+      "CASH_EQUIVALENT",
+      "FIXED_INCOME",
+      "CURRENCY",
+      "COLLECTIVE_INVESTMENT",
+    ]),
+    cusip: z.string(),
+    symbol: z.string(),
+    description: z.string(),
+    instrumentId: z.int(),
+    netChange: z.number(),
+    expirationDate: datetimeSchema,
+    optionDeliverables: z.array(TransactionAPIOptionDeliverableSchema),
+    optionPremiumMultiplier: z.int(),
+    putCall: z.enum(["PUT", "CALL", "UNKNOWN"]),
+    strikePrice: z.number(),
+    type: z.enum(["VANILLA", "BINARY", "BARRIER", "UNKNOWN"]),
+    underlyingSymbol: z.string(),
+    underlyingCusip: z.string(),
+    deliverable: z.lazy(() => TransactionInstrumentSchema),
+  });
 
 export const ProductSchema = z.strictObject({
   assetType: z.enum([
@@ -1175,54 +1200,34 @@ export const ProductSchema = z.strictObject({
 });
 export type Product = z.infer<typeof ProductSchema>;
 
-export const IndexSchema = z
-  .strictObject({
-    activeContract: z.boolean().default(false),
-    type: z.enum(["BROAD_BASED", "NARROW_BASED", "UNKNOWN"]),
-  })
-  .and(
-    z.union([
-      TransactionCashEquivalentSchema,
-      CollectiveInvestmentSchema,
-      CurrencySchema,
-      TransactionEquitySchema,
-      TransactionFixedIncomeSchema,
-      ForexSchema,
-      FutureSchema,
-      z.strictObject({}),
-      TransactionMutualFundSchema,
-      TransactionOptionSchema,
-      ProductSchema,
-    ])
-  );
+export const IndexSchema = z.strictObject({
+  activeContract: z.boolean().default(false),
+  type: z.enum(["BROAD_BASED", "NARROW_BASED", "UNKNOWN"]),
+});
 export type Index = z.infer<typeof IndexSchema>;
 
-export const FutureSchema = z
-  .strictObject({
-    activeContract: z.boolean().default(false),
-    type: z.enum(["STANDARD", "UNKNOWN"]),
-    expirationDate: z.iso.datetime(),
-    lastTradingDate: z.iso.datetime(),
-    firstNoticeDate: z.iso.datetime(),
-    multiplier: z.number(),
-  })
-  .and(
-    z.union([
-      TransactionCashEquivalentSchema,
-      CollectiveInvestmentSchema,
-      CurrencySchema,
-      TransactionEquitySchema,
-      TransactionFixedIncomeSchema,
-      ForexSchema,
-      IndexSchema,
-      TransactionMutualFundSchema,
-      TransactionOptionSchema,
-      ProductSchema,
-      z.strictObject({}),
-    ])
-  );
+export const FutureSchema = z.strictObject({
+  activeContract: z.boolean().default(false),
+  type: z.enum(["STANDARD", "UNKNOWN"]),
+  expirationDate: datetimeSchema,
+  lastTradingDate: datetimeSchema,
+  firstNoticeDate: datetimeSchema,
+  multiplier: z.number(),
+});
 export type Future = z.infer<typeof FutureSchema>;
 
+export type TransactionInstrument =
+  | TransactionCashEquivalent
+  | CollectiveInvestment
+  | Currency
+  | TransactionEquity
+  | TransactionFixedIncome
+  | Forex
+  | Future
+  | Index
+  | TransactionMutualFund
+  | TransactionOption
+  | Product;
 export const TransactionInstrumentSchema = z.union([
   TransactionCashEquivalentSchema,
   CollectiveInvestmentSchema,
@@ -1236,7 +1241,6 @@ export const TransactionInstrumentSchema = z.union([
   TransactionOptionSchema,
   ProductSchema,
 ]);
-export type TransactionInstrument = z.infer<typeof TransactionInstrumentSchema>;
 
 export const TransactionTypeSchema = z.enum([
   "TRADE",
@@ -1304,15 +1308,15 @@ export type TransferItem = z.infer<typeof TransferItemSchema>;
 
 export const TransactionSchema = z.strictObject({
   activityId: z.int(),
-  time: z.iso.datetime(),
+  time: datetimeSchema,
   user: UserDetailsSchema,
   description: z.string(),
   accountNumber: z.string(),
   type: TransactionTypeSchema,
   status: z.enum(["VALID", "INVALID", "PENDING", "UNKNOWN"]),
   subAccount: z.enum(["CASH", "MARGIN", "SHORT", "DIV", "INCOME", "UNKNOWN"]),
-  tradeDate: z.iso.datetime(),
-  settlementDate: z.iso.datetime(),
+  tradeDate: datetimeSchema,
+  settlementDate: datetimeSchema,
   positionId: z.int(),
   orderId: z.int(),
   netAmount: z.number(),
