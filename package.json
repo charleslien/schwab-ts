@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/charleslien/schwab-ts#readme",
   "dependencies": {
+    "typescript": "^5.9.3",
     "zod": "^4.1.12"
   }
 }
