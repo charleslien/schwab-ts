@@ -4,7 +4,7 @@ import {
   ServiceErrorSchema,
 } from "../schema/trader/common";
 import { UserPreferenceSchema } from "../schema/trader/user-preference";
-import { fromSchema } from "./factory";
+import { generateEndpointWrapper } from "./factory";
 
 export const getUserPreferenceRequestSchema = z.undefined().transform(() => ({
   endpoint: "/trader/v1/userPreference",
@@ -17,7 +17,7 @@ export const getUserPreferenceResponseSchema = z
   .discriminatedUnion("code", [
     z.object({
       code: z.literal(200),
-      json: z.array(UserPreferenceSchema),
+      json: UserPreferenceSchema,
     }),
     z.object({
       code: z.literal(400),
@@ -45,7 +45,7 @@ export type GetUserPreferenceResponse = z.infer<
   typeof getUserPreferenceResponseSchema
 >;
 
-export const getUserPreference = fromSchema({
+export const getUserPreference = generateEndpointWrapper({
   requestSchema: getUserPreferenceRequestSchema,
   responseSchema: getUserPreferenceResponseSchema,
   method: "GET",

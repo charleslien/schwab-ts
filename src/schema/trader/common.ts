@@ -849,8 +849,14 @@ export const PreviewOrderSchema = z.strictObject({
 export type PreviewOrder = z.infer<typeof PreviewOrderSchema>;
 
 export const ServiceErrorSchema = z.strictObject({
-  message: z.string(),
-  errors: z.array(z.string()),
+  errors: z.array(
+    z.object({
+      id: z.string(),
+      status: z.number(),
+      title: z.string(),
+      detail: z.string(),
+    })
+  ),
 });
 export type ServiceError = z.infer<typeof ServiceErrorSchema>;
 
@@ -1334,6 +1340,6 @@ export type Transaction = z.infer<typeof TransactionSchema>;
 // ------- Response -------
 
 export const responseHeaderSchema = z.object({
-  "Schwab-Client-CorrelID": z.string(),
+  "schwab-client-correlid": z.string(),
 });
 export type Header = z.infer<typeof responseHeaderSchema>;

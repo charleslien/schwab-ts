@@ -1,12 +1,18 @@
 import type { z } from "zod";
 
-const SCHWAB_API_URL = "https://api.apischwab.com";
+const SCHWAB_API_URL = "https://api.schwabapi.com";
 
-export function fromSchema<
+type EndpointWrapper<Request, Response> = (
+  params: (Request extends undefined
+    ? { request?: undefined }
+    : { request: Request }) & { authToken?: string }
+) => Promise<Response>;
+
+export function generateEndpointWrapper<
   Request,
   ParsedRequest extends {
-    searchParams?: Record<string, string>;
     endpoint: string;
+    searchParams?: Record<string, string>;
     headers?: Record<string, string>;
   },
   Response extends {
@@ -18,15 +24,13 @@ export function fromSchema<
   requestSchema: z.ZodType<ParsedRequest, Request>;
   responseSchema: z.ZodType<Response>;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-}): (
-  ...requests: Request extends undefined ? [] : [Request]
-) => Promise<Response> {
+}): EndpointWrapper<Request, Response> {
   const { requestSchema, responseSchema, method } = params;
 
-  async function wrapper(
-    ...requests: Request extends undefined ? [] : [Request]
-  ): Promise<Response> {
-    const { searchParams, endpoint } = requestSchema.parse(requests[0]);
+  const endpointWrapper: EndpointWrapper<Request, Response> = async (input) => {
+    const { endpoint, searchParams, headers } = requestSchema.parse(
+      input.request
+    );
 
     const url = new URL(endpoint, SCHWAB_API_URL);
     for (const [key, value] of Object.entries(searchParams ?? {})) {
@@ -35,14 +39,20 @@ export function fromSchema<
 
     const response = await fetch(url, {
       method,
+      headers: {
+        ...headers,
+        ...(input.authToken
+          ? { Authorization: `Bearer ${input.authToken}` }
+          : {}),
+      },
     });
 
     return responseSchema.parse({
       code: response.status,
-      headers: response.headers,
+      headers: JSON.parse(JSON.stringify(response.headers)),
       json: await response.json(),
     });
-  }
+  };
 
-  return wrapper;
+  return endpointWrapper;
 }

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // ------- From documentation -------
 
-export const UserPreferenceAccountSchema = z.strictObject({
+export const UserPreferenceAccountSchema = z.looseObject({
   accountNumber: z.string(),
   primaryAccount: z.boolean().default(false),
   type: z.string(),
