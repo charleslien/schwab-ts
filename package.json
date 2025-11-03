@@ -14,5 +14,8 @@
   "bugs": {
     "url": "https://github.com/charleslien/schwab-ts/issues"
   },
-  "homepage": "https://github.com/charleslien/schwab-ts#readme"
+  "homepage": "https://github.com/charleslien/schwab-ts#readme",
+  "dependencies": {
+    "zod": "^4.1.12"
+  }
 }
