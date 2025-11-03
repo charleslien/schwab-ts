@@ -1,6 +1,6 @@
 {
   "name": "schwab-ts",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Unofficial TypeScript Wrapper for Charles Schwab",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
