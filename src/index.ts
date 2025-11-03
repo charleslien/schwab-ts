@@ -1,2 +1,2 @@
-export type * from "./request/index";
-export type * from "./schema/index";
+export * from "./request/index";
+export * from "./schema/index";

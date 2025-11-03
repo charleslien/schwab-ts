@@ -2,6 +2,13 @@ import type { z } from "zod";
 
 const SCHWAB_API_URL = "https://api.schwabapi.com";
 
+export type RequestOutput = {
+  endpoint: string;
+  queryParams?: Record<string, string>;
+  body?: any;
+  headers?: Record<string, string>;
+};
+
 type EndpointWrapper<Request, Response> = (
   params: (Request extends undefined
     ? { request?: undefined }
@@ -9,31 +16,29 @@ type EndpointWrapper<Request, Response> = (
 ) => Promise<Response>;
 
 export function generateEndpointWrapper<
-  Request,
-  ParsedRequest extends {
-    endpoint: string;
-    searchParams?: Record<string, string>;
-    headers?: Record<string, string>;
-  },
-  Response extends {
+  ReqInput,
+  ReqOutput extends RequestOutput,
+  ResOutput extends {
     code: number;
     headers: Record<string, any>;
     json: any;
   }
 >(params: {
-  requestSchema: z.ZodType<ParsedRequest, Request>;
-  responseSchema: z.ZodType<Response>;
+  requestSchema: z.ZodType<ReqOutput, ReqInput>;
+  responseSchema: z.ZodType<ResOutput>;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-}): EndpointWrapper<Request, Response> {
+}): EndpointWrapper<ReqInput, ResOutput> {
   const { requestSchema, responseSchema, method } = params;
 
-  const endpointWrapper: EndpointWrapper<Request, Response> = async (input) => {
-    const { endpoint, searchParams, headers } = requestSchema.parse(
+  const endpointWrapper: EndpointWrapper<ReqInput, ResOutput> = async (
+    input
+  ) => {
+    const { endpoint, queryParams, body, headers } = requestSchema.parse(
       input.request
     );
 
     const url = new URL(endpoint, SCHWAB_API_URL);
-    for (const [key, value] of Object.entries(searchParams ?? {})) {
+    for (const [key, value] of Object.entries(queryParams ?? {})) {
       url.searchParams.set(key, value);
     }
 
@@ -45,12 +50,14 @@ export function generateEndpointWrapper<
           ? { Authorization: `Bearer ${input.authToken}` }
           : {}),
       },
+      ...(body ? { body: JSON.stringify(body) } : {}),
     });
 
+    const text = await response.text();
     return responseSchema.parse({
       code: response.status,
       headers: JSON.parse(JSON.stringify(response.headers)),
-      json: await response.json(),
+      json: text ? JSON.parse(text) : undefined,
     });
   };
 

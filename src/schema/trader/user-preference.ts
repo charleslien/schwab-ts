@@ -13,7 +13,7 @@ export const UserPreferenceAccountSchema = z.looseObject({
 });
 export type UserPreferenceAccount = z.infer<typeof UserPreferenceAccountSchema>;
 
-export const StreamerInfoSchema = z.strictObject({
+export const StreamerInfoSchema = z.looseObject({
   streamerSocketUrl: z.string(),
   schwabClientCustomerId: z.string(),
   schwabClientCorrelId: z.string(),
@@ -22,13 +22,13 @@ export const StreamerInfoSchema = z.strictObject({
 });
 export type StreamerInfo = z.infer<typeof StreamerInfoSchema>;
 
-export const OfferSchema = z.strictObject({
+export const OfferSchema = z.looseObject({
   level2Permissions: z.boolean().default(false),
   mktDataPermission: z.string(),
 });
 export type Offer = z.infer<typeof OfferSchema>;
 
-export const UserPreferenceSchema = z.strictObject({
+export const UserPreferenceSchema = z.looseObject({
   accounts: z.array(UserPreferenceAccountSchema),
   streamerInfo: z.array(StreamerInfoSchema),
   offers: z.array(OfferSchema),
