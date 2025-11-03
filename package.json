@@ -4,7 +4,13 @@
   "description": "Unofficial TypeScript Wrapper for Charles Schwab",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/charleslien/schwab-ts.git"
